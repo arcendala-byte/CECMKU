@@ -717,6 +717,30 @@ const translations: Record<string, string> = {
   "You have already submitted a ballot for this election.": "Vous avez déjà soumis un bulletin pour cette élection.",
   "Your account is not eligible to vote.": "Votre compte n'est pas autorisé à voter.",
   "Failed to submit ballot. Please try again.": "Échec de la soumission du bulletin. Veuillez réessayer.",
+  "We're here to help": "Nous sommes là pour vous aider",
+  "Get in Touch": "Contactez-nous",
+  "Have questions about the election process, need assistance with your account, or require more information? Reach out to our team through any of the channels below.":
+    "Vous avez des questions sur le processus électoral, besoin d'aide avec votre compte ou besoin de plus d'informations ? Contactez notre équipe par l'un des canaux ci-dessous.",
+  "Call or WhatsApp": "Appeler ou envoyer un WhatsApp",
+  "Speak directly with our team or send us a message on WhatsApp.":
+    "Parlez directement avec notre équipe ou envoyez-nous un message sur WhatsApp.",
+  "Call Now": "Appeler maintenant",
+  "Email Us": "Envoyez-nous un e-mail",
+  "For general inquiries, election-related questions, or assistance, send us an email.":
+    "Pour toute demande générale, question liée aux élections ou assistance, envoyez-nous un e-mail.",
+  "Send an Email": "Envoyer un e-mail",
+  "Our Location": "Notre emplacement",
+  "Mount Kenya University": "Université Mount Kenya",
+  "Thika, Kenya": "Thika, Kenya",
+  "Contact Availability": "Disponibilité",
+  "Contact us by phone, WhatsApp, or email.":
+    "Contactez-nous par téléphone, WhatsApp ou e-mail.",
+  "Our team will respond as soon as possible.":
+    "Notre équipe vous répondra dès que possible.",
+  "We're Ready to Assist You": "Nous sommes prêts à vous aider",
+  "Your questions and concerns matter. Get in touch with us and let us help you navigate the election process.":
+    "Vos questions et préoccupations comptent. Contactez-nous et laissez-nous vous accompagner tout au long du processus électoral.",
+  "Chat With Us": "Discuter avec nous",
 };
 
 const originalText = new WeakMap<Text, string>();
