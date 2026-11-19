@@ -12,9 +12,10 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: [
     "192.168.100.8",
     "192.168.1.159",
-    "dnl9xt4p-3000.uks1.devtunnels.ms"
+    "dnl9xt4p-3000.uks1.devtunnels.ms",
   ],
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",
@@ -32,7 +33,7 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "res.cloudinary.com",
-      }
+      },
     ],
   },
 };
