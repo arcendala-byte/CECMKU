@@ -10,24 +10,27 @@ import {
 
 import { Card, CardContent } from "@/components/ui/card";
 
-const defaultWhatsAppMessage = encodeURIComponent(
-  "Hello CECMKU Election Committee, I need assistance with the election portal."
-);
+function buildWhatsAppUrl(phone: string) {
+  const url = new URL("https://whatsapp.com");
+  url.pathname = "/send";
+  url.searchParams.set("phone", phone);
+  url.searchParams.set(
+    "text",
+    "Hello CECMKU Election Committee, I need assistance with the election portal."
+  );
+  return url.toString();
+}
 
 const contactMethods = [
   {
     number: "+254 780 003 817",
     tel: "tel:+254780003817",
-    whatsappUrl:
-      "https://whatsapp.com" +
-      defaultWhatsAppMessage,
+    whatsappUrl: buildWhatsAppUrl("254780003817"),
   },
   {
     number: "+254 115 755 868",
     tel: "tel:+254115755868",
-    whatsappUrl:
-      "https://whatsapp.com" +
-      defaultWhatsAppMessage,
+    whatsappUrl: buildWhatsAppUrl("254115755868"),
   },
 ];
 
