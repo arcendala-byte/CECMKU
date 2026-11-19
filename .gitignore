@@ -50,3 +50,6 @@ next-env.d.ts
 
 # Temporary development tools
 /.tsupgrader/
+
+# Database backups
+/backups/

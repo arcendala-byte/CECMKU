@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { ElectionStatus } from "../../generated/prisma/client";
+import type { ElectionStatus } from "@prisma/client";
 
 const dateTime = z
   .string()
