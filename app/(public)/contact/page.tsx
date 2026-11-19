@@ -10,22 +10,26 @@ import {
 
 import { Card, CardContent } from "@/components/ui/card";
 
-const contactMethods = [
-  {
-    number: "+254 780 003 817",
-    tel: "+254780003817",
-    whatsapp: "254780003817",
-  },
-  {
-    number: "+254 115 755 868",
-    tel: "+254115755868",
-    whatsapp: "254115755868",
-  },
-];
-
 const defaultWhatsAppMessage = encodeURIComponent(
   "Hello CECMKU Election Committee, I need assistance with the election portal."
 );
+
+const contactMethods = [
+  {
+    number: "+254 780 003 817",
+    tel: "tel:+254780003817",
+    whatsappUrl:
+      "https://whatsapp.com" +
+      defaultWhatsAppMessage,
+  },
+  {
+    number: "+254 115 755 868",
+    tel: "tel:+254115755868",
+    whatsappUrl:
+      "https://whatsapp.com" +
+      defaultWhatsAppMessage,
+  },
+];
 
 export default function ContactPage() {
   return (
@@ -79,7 +83,7 @@ export default function ContactPage() {
 
                     <div className="flex flex-wrap gap-3">
                       <a
-                        href={`tel:${contact.tel}`}
+                        href={contact.tel}
                         className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-md bg-[#2563EB] text-white text-sm font-medium hover:bg-blue-700 transition-colors"
                       >
                         <Phone className="w-4 h-4" />
@@ -87,7 +91,7 @@ export default function ContactPage() {
                       </a>
 
                       <a
-                        href={`https://wa.me{contact.whatsapp}?text=${defaultWhatsAppMessage}`}
+                        href={contact.whatsappUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-md border border-[#16A34A] text-[#16A34A] text-sm font-medium hover:bg-green-50 transition-colors"
@@ -193,7 +197,7 @@ export default function ContactPage() {
           </p>
 
           <a
-            href={`https://wa.me{defaultWhatsAppMessage}`}
+            href={contactMethods[0].whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-6 py-3 bg-white text-[#0B1930] rounded-md font-semibold text-sm hover:bg-gray-100 transition-colors"
