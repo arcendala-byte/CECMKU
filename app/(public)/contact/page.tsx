@@ -10,10 +10,9 @@ import {
 
 import { Card, CardContent } from "@/components/ui/card";
 
-function buildWhatsAppUrl(phone: string) {
-  const url = new URL("https://whatsapp.com");
-  url.pathname = "/send";
-  url.searchParams.set("phone", phone);
+function buildWhatsAppDirectUrl(phone: string) {
+  const url = new URL("https://wa.me");
+  url.pathname = ["", phone].join("/");
   url.searchParams.set(
     "text",
     "Hello CECMKU Election Committee, I need assistance with the election portal."
@@ -25,12 +24,12 @@ const contactMethods = [
   {
     number: "+254 780 003 817",
     tel: "tel:+254780003817",
-    whatsappUrl: buildWhatsAppUrl("254780003817"),
+    whatsappUrl: buildWhatsAppDirectUrl("254780003817"),
   },
   {
     number: "+254 115 755 868",
     tel: "tel:+254115755868",
-    whatsappUrl: buildWhatsAppUrl("254115755868"),
+    whatsappUrl: buildWhatsAppDirectUrl("254115755868"),
   },
 ];
 
