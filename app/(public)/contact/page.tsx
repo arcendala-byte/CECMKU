@@ -23,6 +23,10 @@ const contactMethods = [
   },
 ];
 
+const defaultWhatsAppMessage = encodeURIComponent(
+  "Hello CECMKU Election Committee, I need assistance with the election portal."
+);
+
 export default function ContactPage() {
   return (
     <main className="min-h-screen bg-[#F8FAFC]">
@@ -83,7 +87,7 @@ export default function ContactPage() {
                       </a>
 
                       <a
-                        href={`https://wa.me{contact.whatsapp}`}
+                        href={`https://wa.me{contact.whatsapp}?text=${defaultWhatsAppMessage}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-md border border-[#16A34A] text-[#16A34A] text-sm font-medium hover:bg-green-50 transition-colors"
@@ -189,7 +193,7 @@ export default function ContactPage() {
           </p>
 
           <a
-            href="https://wa.me"
+            href={`https://wa.me{defaultWhatsAppMessage}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-6 py-3 bg-white text-[#0B1930] rounded-md font-semibold text-sm hover:bg-gray-100 transition-colors"
