@@ -5,8 +5,7 @@ import { candidateSchema } from "@/lib/validations/candidate";
 import { requireAdmin } from "@/lib/auth/session";
 import { getCandidateDeletionError } from "@/lib/candidates/rules";
 import { revalidatePath } from "next/cache";
-import { mkdir, unlink, writeFile } from "node:fs/promises";
-import path from "node:path";
+import { put, del } from "@vercel/blob";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 
@@ -14,21 +13,17 @@ const candidateUpdateSchema = candidateSchema.extend({
   status: z.enum(["PENDING", "APPROVED", "REJECTED", "ACTIVE", "INACTIVE"]),
 });
 
-type SavedCandidatePhoto = {
-  photoUrl: string;
-  filePath: string;
-};
-
 async function saveCandidatePhoto(value: FormDataEntryValue | null): Promise<{
-  photo?: SavedCandidatePhoto;
+  photoUrl?: string;
   error?: string;
 }> {
   if (!(value instanceof File) || value.size === 0) return {};
   if (!["image/jpeg", "image/png", "image/webp"].includes(value.type)) {
     return { error: "The candidate photo must be JPG, PNG, or WebP." };
   }
-  if (value.size > 5 * 1024 * 1024) {
-    return { error: "The candidate photo must not exceed 5 MB." };
+  // Vercel Serverless Functions hard-cap request bodies at 4.5 MB
+  if (value.size > 4 * 1024 * 1024) {
+    return { error: "The candidate photo must not exceed 4 MB." };
   }
 
   const extensionByType: Record<string, string> = {
@@ -36,21 +31,22 @@ async function saveCandidatePhoto(value: FormDataEntryValue | null): Promise<{
     "image/png": "png",
     "image/webp": "webp",
   };
-  const fileName = `${randomUUID()}.${extensionByType[value.type]}`;
-  const uploadDirectory = path.join(process.cwd(), "public", "uploads", "candidates");
-  const filePath = path.join(uploadDirectory, fileName);
-  await mkdir(uploadDirectory, { recursive: true });
-  await writeFile(filePath, Buffer.from(await value.arrayBuffer()));
+  const fileName = `candidates/${randomUUID()}.${extensionByType[value.type]}`;
 
-  return { photo: { photoUrl: `/uploads/candidates/${fileName}`, filePath } };
+  const blob = await put(fileName, value, {
+    access: "public",
+    contentType: value.type,
+  });
+
+  return { photoUrl: blob.url };
 }
 
-async function removeUnusedPhoto(filePath: string | undefined) {
-  if (!filePath) return;
+async function removeUnusedPhoto(photoUrl: string | null | undefined) {
+  if (!photoUrl || !photoUrl.includes("://vercel-storage.com")) return;
   try {
-    await unlink(filePath);
+    await del(photoUrl);
   } catch {
-    console.error("Failed to remove an unused candidate photo.");
+    console.error("Failed to remove an unused candidate photo from Vercel Blob.");
   }
 }
 
@@ -73,13 +69,14 @@ export async function createCandidateAction(prevState: unknown, formData: FormDa
     return { error: "Invalid form data", fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
-  let photoFilePath: string | undefined;
+  let uploadedPhotoUrl: string | undefined;
   try {
     const savedPhoto = await saveCandidatePhoto(formData.get("photo"));
     if (savedPhoto.error) return { error: savedPhoto.error };
-    photoFilePath = savedPhoto.photo?.filePath;
+    uploadedPhotoUrl = savedPhoto.photoUrl;
+
     const candidate = await prisma.candidate.create({
-      data: { ...parsed.data, photoUrl: savedPhoto.photo?.photoUrl },
+      data: { ...parsed.data, photoUrl: uploadedPhotoUrl },
     });
 
     await prisma.auditLog.create({
@@ -96,11 +93,11 @@ export async function createCandidateAction(prevState: unknown, formData: FormDa
     revalidatePath("/candidates");
     return { success: true, candidateId: candidate.id };
   } catch (error: unknown) {
-    await removeUnusedPhoto(photoFilePath);
+    await removeUnusedPhoto(uploadedPhotoUrl);
     if (typeof error === "object" && error !== null && "code" in error && error.code === "P2002") {
       return { error: "A candidate with this registration number already exists." };
     }
-    console.error("Candidate creation failed.");
+    console.error("Candidate creation failed:", error);
     return { error: "Failed to create candidate. Please try again." };
   }
 }
@@ -125,7 +122,7 @@ export async function updateCandidateAction(prevState: unknown, formData: FormDa
     return { error: "Invalid form data", fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
-  let photoFilePath: string | undefined;
+  let newlyUploadedUrl: string | undefined;
   try {
     const existing = await prisma.candidate.findUnique({
       where: { id: candidateId.data },
@@ -135,14 +132,14 @@ export async function updateCandidateAction(prevState: unknown, formData: FormDa
 
     const savedPhoto = await saveCandidatePhoto(formData.get("photo"));
     if (savedPhoto.error) return { error: savedPhoto.error };
-    photoFilePath = savedPhoto.photo?.filePath;
+    newlyUploadedUrl = savedPhoto.photoUrl;
 
     const candidate = await prisma.$transaction(async (tx) => {
       const updatedCandidate = await tx.candidate.update({
         where: { id: existing.id },
         data: {
           ...parsed.data,
-          photoUrl: savedPhoto.photo?.photoUrl ?? existing.photoUrl,
+          photoUrl: newlyUploadedUrl ?? existing.photoUrl,
         },
       });
       await tx.auditLog.create({
@@ -157,17 +154,22 @@ export async function updateCandidateAction(prevState: unknown, formData: FormDa
       return updatedCandidate;
     });
 
+    // Clean up old blob if a new photo replaced it
+    if (newlyUploadedUrl && existing.photoUrl && existing.photoUrl !== newlyUploadedUrl) {
+      await removeUnusedPhoto(existing.photoUrl);
+    }
+
     revalidatePath("/admin/candidates");
     revalidatePath(`/admin/candidates/${candidate.id}/edit`);
     revalidatePath("/admin/elections");
     revalidatePath("/candidates");
     return { success: true };
   } catch (error: unknown) {
-    await removeUnusedPhoto(photoFilePath);
+    await removeUnusedPhoto(newlyUploadedUrl);
     if (typeof error === "object" && error !== null && "code" in error && error.code === "P2002") {
       return { error: "A candidate with this registration number already exists." };
     }
-    console.error("Candidate update failed.");
+    console.error("Candidate update failed:", error);
     return { error: "Failed to update candidate. Please try again." };
   }
 }
@@ -183,6 +185,7 @@ export async function deleteCandidateAction(candidateId: string) {
       select: {
         id: true,
         fullName: true,
+        photoUrl: true,
         _count: { select: { selections: true, results: true } },
         assignments: { select: { election: { select: { status: true } } } },
       },
@@ -211,6 +214,8 @@ export async function deleteCandidateAction(candidateId: string) {
         },
       });
     });
+
+    await removeUnusedPhoto(candidate.photoUrl);
 
     revalidatePath("/admin/candidates");
     revalidatePath("/admin/elections");
